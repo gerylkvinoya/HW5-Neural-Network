@@ -282,6 +282,20 @@ class AIPlayer(Player):
 
         return bestNode
 
+    #initWeights
+    #
+    #Description: Initiate weights for the hidden and output layers
+    #             40 in the hidden layer, 9 in the output layer
+    #
+    #Parameters: numWeights - how many weights to create
+    #
+    #return: list of weights created
+    def initWeights(self, numWeights):
+        weightList = []
+        for i in range(numWeights):
+            weightList.append(random.uniform(-1.0, 1.0))
+        return weightList
+
 class TestCreateNode(unittest.TestCase):
 
     #queens, anthills, and tunnels only
@@ -291,23 +305,40 @@ class TestCreateNode(unittest.TestCase):
 
         self.assertEqual(player.utility(gameState), 0.01)
 
-def testBestMove(self):
-    player = AIPlayer(0)
+    def testBestMove(self):
+        player = AIPlayer(0)
 
-    nodes = []
+        nodes = []
 
-    #making node objects (only eval is used)
-    for i in range(10):
-        node = {
-            'eval' : i,
-        }
-        nodes.append(node) 
+        #making node objects (only eval is used)
+        for i in range(10):
+            node = {
+                'eval' : i,
+            }
+            nodes.append(node) 
 
-    best = player.bestMove(nodes)
+        best = player.bestMove(nodes)
 
-    self.assertEqual(best['eval'], 9)
+        self.assertEqual(best['eval'], 9)
 
+    def testInitWeights(self):
+        player = AIPlayer(0)
+        hiddenLayer = player.initWeights(40)
+        outputLayer = player.initWeights(9)
+
+        for num in hiddenLayer:
+            self.assertAlmostEqual(num, 0, delta=1)
         
+        for num in outputLayer:
+            self.assertAlmostEqual(num, 0, delta=1)
+        
+        self.assertEqual(40, len(hiddenLayer))
+        self.assertEqual(9, len(outputLayer))
+
+    def testNeuralNetwork(self):
+        player = AIPlayer
+        hiddenLayer = player.initWeights(40)
+        outputLayer = player.initWeights(9)
 
 
 
