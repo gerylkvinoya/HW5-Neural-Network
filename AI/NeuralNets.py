@@ -16,6 +16,7 @@ from GameState import *
 from AIPlayerUtils import *
 from typing import Dict, List
 import unittest
+import numpy as np
 
 
 ##
@@ -296,6 +297,90 @@ class AIPlayer(Player):
             weightList.append(random.uniform(-1.0, 1.0))
         return weightList
 
+    #sig
+    #
+    #Description: perform the sigmoidal activation function
+    #             1/(1+ e^{-x})
+    #
+    #Parameters: num - number for x
+    #
+    #return: the output of the sigmoidal activation function
+    def sig(self, num):
+        return 1/(1 + np.exp(-num))
+
+    #activateNeuron
+    #
+    #Description: activation function on a single neuron given 4 inputs
+    #             should have the same amount of weights as inputs
+    #
+    #Parameters:
+    #   inp - list of inputs
+    #   weights - list of weights
+    #   
+    #
+    #return: the output of the neuron activation
+    def activateNeuron(self, inp, weights):
+        output = 0
+        inputs = []
+        inputs.append(1) #append 1 as the bias in the list in the first element
+
+        #add all other inputs in the list 
+        #inputs list looks like this: [bias, input1, input2, input3, input4]
+        for input in inp:
+            inputs.append(input)
+
+        #check the length of the lists
+        if(len(inputs) != len(weights)):
+            print("length of inputs not equal to length of weights")
+            return -1
+
+        for i in range(len(weights)):
+            output += weights[i] * inputs[i]
+        
+        return output
+
+    #getOutput
+    #
+    #Description: get the sum of all the neurons in the hidden layer to apply to the output layer
+    #
+    #Parameters:
+    #   inp - list of initial inputs
+    #   hiddenWeights - list of initial weights (should be 40)
+    #   outputWeights - list of output weights (should be 9)
+    #   
+    #
+    #return: the output of the network
+    def getOutput(self, inp, hiddenWeights, outputWeights):
+        inputs = []
+        inputs.append(1) #append 1 as the bias in the list in the first element
+
+        #add all other inputs in the list 
+        #inputs list looks like this: [bias, input1, input2, input3, input4]
+        for input in inp:
+            inputs.append(input)
+
+        #list of numbers after using sig function (should be of size 8)
+        activationList = []
+
+        #get every 5 elements of the weights and put that in list to use self.activateNeuron on
+        #len(hiddenWeights) should at least be divisible by 5; 5 weights represent a neuron
+        for i in range(0, len(hiddenWeights), 5):
+            activation = self.activateNeuron([hiddenWeights[i], hiddenWeights[i+1], 
+                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]], inputs)
+
+            activationList.append(self.sig(activation))
+
+        #NEED TO TEST
+        #NEED TO TEST
+        #NEED TO TEST
+        return self.activateNeuron(activationList, outputWeights)
+            
+
+
+
+        
+
+
 class TestCreateNode(unittest.TestCase):
 
     #queens, anthills, and tunnels only
@@ -335,10 +420,25 @@ class TestCreateNode(unittest.TestCase):
         self.assertEqual(40, len(hiddenLayer))
         self.assertEqual(9, len(outputLayer))
 
+    def testSigmoid(self):
+        player = AIPlayer(0)
+        num = player.sig(1)
+        self.assertAlmostEqual(num, 0.7310585786300049)
+
+    def testActivateNeuron(self):
+        player = AIPlayer(0)
+        weights = [-0.5061572036196194, 0.11710044128933261, -0.5640861215824573, -0.6753749016864017, 0.20443410702909404]
+        inputs = [1, 0, 0, 1]
+        activation = player.activateNeuron(inputs, weights)
+        self.assertAlmostEqual(activation, (-0.184622655301))
+
+
+
     def testNeuralNetwork(self):
-        player = AIPlayer
+        player = AIPlayer(0)
         hiddenLayer = player.initWeights(40)
         outputLayer = player.initWeights(9)
+        num = player.sig(1)
 
 
 
