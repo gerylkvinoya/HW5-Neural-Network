@@ -332,6 +332,8 @@ class AIPlayer(Player):
         #check the length of the lists
         if(len(inputs) != len(weights)):
             print("length of inputs not equal to length of weights")
+            print(inputs)
+            print(weights)
             return -1
 
         for i in range(len(weights)):
@@ -352,12 +354,13 @@ class AIPlayer(Player):
     #return: the output of the network
     def getOutput(self, inp, hiddenWeights, outputWeights):
         inputs = []
-        inputs.append(1) #append 1 as the bias in the list in the first element
+        #inputs.append(1) #append 1 as the bias in the list in the first element
 
         #add all other inputs in the list 
         #inputs list looks like this: [bias, input1, input2, input3, input4]
         for input in inp:
             inputs.append(input)
+
 
         #list of numbers after using sig function (should be of size 8)
         activationList = []
@@ -365,8 +368,8 @@ class AIPlayer(Player):
         #get every 5 elements of the weights and put that in list to use self.activateNeuron on
         #len(hiddenWeights) should at least be divisible by 5; 5 weights represent a neuron
         for i in range(0, len(hiddenWeights), 5):
-            activation = self.activateNeuron([hiddenWeights[i], hiddenWeights[i+1], 
-                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]], inputs)
+            activation = self.activateNeuron(inputs, [hiddenWeights[i], hiddenWeights[i+1], 
+                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]])
 
             activationList.append(self.sig(activation))
 
@@ -431,6 +434,45 @@ class TestCreateNode(unittest.TestCase):
         inputs = [1, 0, 0, 1]
         activation = player.activateNeuron(inputs, weights)
         self.assertAlmostEqual(activation, (-0.184622655301))
+    
+    def testGetOutputOneNeuron(self):
+        player = AIPlayer(0)
+
+        hiddenWeights = [-0.5061572036196194, 0.11710044128933261, -0.5640861215824573, -0.6753749016864017, 0.20443410702909404]
+        outputWeights = [0.2395010298047295, -0.79178479274999917]
+        inputs = [1, 0, 0, 1]
+
+        output = player.getOutput(inputs, hiddenWeights, outputWeights)
+        self.assertAlmostEqual(output, -0.119949466871)
+
+    def testGetOutputEightNeurons(self):
+        player = AIPlayer(0)
+
+        #40 weights for 8 neurons
+        hiddenWeights = [0.3415, -0.4910, 0.7999, 0.1322, -0.9931, 
+                         0.5132, -0.1122, -0.8483, 0.6340, 0.8888,
+                         0.1342, -0.9348, -0.1234, 0.4333, -0.1222,
+                         0.3937, -0.3882, 0.5555, 0.9294, 0.8726,
+                         0.3947, 0.9673, 0.4872, -0.8366, -0.2838,
+                         0.6333, -0.4522, 0.9983, 0.8272, 0.2333,
+                         0.3344, -0.5523, -0.9101, 0.3710, 0.3999,
+                         -0.1233, -0.3456, -0.3291, -0.9967, -0.8437]
+
+        #9 weights for one output
+        outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
+                         0.1022, -0.5234, -0.6444, -0.7291]
+
+        inputs = [1, 0, 0, 1]
+
+        #round to 4 places, it's close enough after testing with 3 different sets of numbers
+        aiOutput = round(player.getOutput(inputs, hiddenWeights, outputWeights), 4)
+
+        self.assertAlmostEqual(aiOutput, 0.4165, delta=0.001)
+
+
+
+
+
 
 
 
