@@ -3,6 +3,10 @@
 # CS 421
 #
 # Authors: Geryl Vinoya and Morgan Connor
+#
+# Sources Used:
+#   https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/
+#   Dr. Nuxoll's slides
 ##
 import random
 import sys
@@ -317,7 +321,6 @@ class AIPlayer(Player):
     #   inp - list of inputs
     #   weights - list of weights
     #   
-    #
     #return: the output of the neuron activation
     def activateNeuron(self, inp, weights):
         output = 0
@@ -341,18 +344,16 @@ class AIPlayer(Player):
         
         return output
 
-    #getOutput
+    #getHiddenOutputList
     #
-    #Description: get the sum of all the neurons in the hidden layer to apply to the output layer
+    #Description: get a list of all the outputs of the nodes in the hidden layer
     #
     #Parameters:
     #   inp - list of initial inputs
     #   hiddenWeights - list of initial weights (should be 40)
-    #   outputWeights - list of output weights (should be 9)
     #   
-    #
-    #return: the output of the network
-    def getOutput(self, inp, hiddenWeights, outputWeights):
+    #return: a list of the hidden outputs
+    def getHiddenOutputList(self, inp, hiddenWeights):
         inputs = []
         #inputs.append(1) #append 1 as the bias in the list in the first element
 
@@ -363,7 +364,10 @@ class AIPlayer(Player):
 
 
         #list of numbers after using sig function (should be of size 8)
-        activationList = []
+        hiddenOutputList = []
+
+        if (len(hiddenWeights) % 5) != 0:
+            print("len(hiddenWeights) not divisible by 5")
 
         #get every 5 elements of the weights and put that in list to use self.activateNeuron on
         #len(hiddenWeights) should at least be divisible by 5; 5 weights represent a neuron
@@ -371,18 +375,186 @@ class AIPlayer(Player):
             activation = self.activateNeuron(inputs, [hiddenWeights[i], hiddenWeights[i+1], 
                 hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]])
 
-            activationList.append(self.sig(activation))
+            hiddenOutputList.append(self.sig(activation))
 
-        #NEED TO TEST
-        #NEED TO TEST
-        #NEED TO TEST
-        return self.activateNeuron(activationList, outputWeights)
+        return hiddenOutputList
+
+    #getOutput
+    #
+    #Description: get the sum of all the neurons in the hidden layer to apply to the output layer
+    #
+    #Parameters:
+    #   inp - list of initial inputs
+    #   hiddenWeights - list of initial weights (should be 40)
+    #   outputWeights - list of output weights (should be 9)
+    #   
+    #return: the output of the network
+    def getOutput(self, inp, hiddenWeights, outputWeights):
+        inputs = []
+        #inputs.append(1) #append 1 as the bias in the list in the first element
+
+        #add all other inputs in the list 
+        #inputs list looks like this: [bias, input1, input2, input3, input4]
+        for input in inp:
+            inputs.append(input)
+
+        #list of numbers after using sig function (should be of size 8)
+        sigList = []
+
+        #grab the list of the hidden layer outputs
+        #perform sig fn on all of them into a list
+        hiddenOutputList = self.getHiddenOutputList(inp, hiddenWeights)
+
+        #"activate" the output node to get the overall output
+        return self.activateNeuron(hiddenOutputList, outputWeights)
             
+    #getErrorTerm
+    #
+    #Description: calculate the error term
+    #             Err Term = (Err)*(output)(1-output)
+    #
+    #Parameters:
+    #   error - the error
+    #   actual - the actual output
+    #   
+    #return: the error term
+    def getErrorTerm(self, error, actual):
+        return (error)*(actual)*(1 - actual)
+    
+    #getHiddenNodeError
+    #
+    #Description: use the error term to calculate the error for each hidden node
+    #             weight*err term
+    #
+    #Parameters:
+    #   errTerm - the error term
+    #   weights - the weights of the output node
+    #
+    #return: list of nodes' error
+    def getHiddenNodeError(self, errTerm, weights):
 
+        hiddenErrorList = []
+        #start at 1 because index 0 should be the bias
+        for i in range(1, len(weights), 1):
+            hiddenErrorList.append(errTerm*weights[i])
 
+        return hiddenErrorList
+
+    #getHiddenNodeErrorTerms
+    #
+    #Description: use the error term to calculate the error for each hidden node
+    #             weight*err term
+    #
+    #Parameters:
+    #   hiddenOutputList - list of all the hidden nodes' output
+    #   hiddenErrorList - list of all the nodes' errors
+    #
+    #return: list of nodes' error term
+    def getHiddenNodeErrorTerms(self, hiddenOutputList, hiddenErrorList):
+        if len(hiddenOutputList) != len(hiddenErrorList):
+            print("Length of hidden output list and hidden error list are not equal")
+            return
+        
+        hiddenErrorTermList = []
+        for i in range(len(hiddenOutputList)):
+
+            hiddenErrorTermList.append(self.getErrorTerm(hiddenErrorList[i], hiddenOutputList[i]))
+        
+        return hiddenErrorTermList 
+
+    #adjustWeight
+    #
+    #Description: adjust a node's weight
+    #
+    #Parameters:
+    #   weight - initial weight W
+    #   errorTerm - error term delta
+    #   input - for x_j
+    #
+    #return: new list of adjusted weights
+    def adjustWeight(self, weight, errorTerm, input):
+        alpha = 0.5
+        
+        return weight + (alpha*errorTerm*input)
+
+    #backPropagate
+    #
+    #Description: perform back propagation on an entire system
+    #
+    #Parameters:
+    #   inp - input
+    #   hiddenWeights - weights in the hidden layer (should be 40)
+    #   outputWeights - weights in the output later (should be 9)
+    #
+    #return: list of list of two new hidden and output weight lists
+    def backPropagate(self, inp, target, hiddenWeights, outputWeights):
 
         
 
+        #calculate output
+        output = self.getOutput(inp, hiddenWeights, outputWeights)
+        #calculate error term
+        error = target - output
+        outputErrorTerm = self.getErrorTerm(error, output)
+
+        #calculate the error term for all the output nodes
+        hiddenNodeErrorList = self.getHiddenNodeError(outputErrorTerm, outputWeights)
+        hiddenOutputList = self.getHiddenOutputList(inp, hiddenWeights)
+        hiddenErrorTerms = self.getHiddenNodeErrorTerms(hiddenOutputList, hiddenNodeErrorList)
+
+        newHiddenWeights = []
+        newOutputWeights = []
+
+        #adds the bias to the beginning of a new input list
+        #[bias, input1, input2, input3, input4]
+        inputs = []
+        inputs.append(1)
+        for input in inp:
+            inputs.append(input)
+
+        #start with the hidden weights
+        for i in range(0, len(hiddenWeights), 1):
+            node = self.getNodeIndex(i)
+            inputIndex = i % 5
+            newHiddenWeights.append(self.adjustWeight(hiddenWeights[i], hiddenErrorTerms[node], inputs[inputIndex]))
+        
+        #insert a 1 at the beginning for the bias
+        hiddenOutputList.insert(0, 1)
+        for i in range(0, len(outputWeights), 1):
+            newOutputWeights.append(self.adjustWeight(outputWeights[i], outputErrorTerm, hiddenOutputList[i]))
+
+        
+
+        return [newHiddenWeights, newOutputWeights, error]
+        
+
+
+    #getNodeIndex
+    #
+    #Description: given a number between 0 and 39,
+    #             find what node the weight belongs to
+    #
+    #Parameters:
+    #   num - index of the weight
+    #
+    #return: index of node this weight belongs to
+    def getNodeIndex(self, num):
+        if num < 5:
+            return 0
+        if num < 10:
+            return 1
+        if num < 15:
+            return 2
+        if num < 20:
+            return 3
+        if num < 25:
+            return 4
+        if num < 30:
+            return 5
+        if num < 35:
+            return 6
+        if num < 40:
+            return 7
 
 class TestCreateNode(unittest.TestCase):
 
@@ -469,18 +641,147 @@ class TestCreateNode(unittest.TestCase):
 
         self.assertAlmostEqual(aiOutput, 0.4165, delta=0.001)
 
+    def testGetErrorTerm(self):
+        player = AIPlayer(0)
+        #self.assertAlmostEqual(player.getErrorTerm(0, 0.4101), -0.0992, delta=0.0001)
+        #self.assertAlmostEqual(player.getErrorTerm(1, 0.3820), -0.1457, delta=0.0001)
+        self.assertAlmostEqual(player.getErrorTerm(-0.2650, 0.2650), -0.0516, delta=0.0001)
+
+    def testGetHiddenNodeError(self):
+        player = AIPlayer(0)
+
+        errTerm = player.getErrorTerm(-0.2650, 0.2650)
+
+        outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
+                         0.1022, -0.5234, -0.6444, -0.7291]
+
+        hiddenErrorList = player.getHiddenNodeError(errTerm, outputWeights)
+
+        expectedList = [0.0154026, -0.0469044, -0.03781764, -0.00578436,
+            -0.00527352, 0.02700744, 0.03325104, 0.03762156]
+
+        for i in range(len(hiddenErrorList)):
+            self.assertAlmostEqual(hiddenErrorList[i], expectedList[i], delta=0.0001)
+    
+    def testGetHiddenOutputList(self):
+        player = AIPlayer(0)
+        inp = [1, 0, 0, 1]
+        hiddenWeights = [0.5061, 0.1171, -0.5640, -0.6753, 0.2044, 
+                        0.1342, -0.4829, 0.8382, -0.3222, 0.0421]
+        
+        activationList = [0.8276, -0.3066]
+        sigList = []
+        for num in activationList:
+            sigList.append(player.sig(num))
+
+        self.assertEqual(player.getHiddenOutputList(inp, hiddenWeights), sigList)
 
 
+    def testGetHiddenNodeErrorTerms(self):
+        player = AIPlayer(0)
+
+        inp = [1, 0, 0, 1]
+        hiddenWeights = [0.5061, 0.1171, -0.5640, -0.6753, 0.2044, 
+                        0.1342, -0.4829, 0.8382, -0.3222, 0.0421]
+
+        #[0.695847223430284, 0.42394485650174163]
+        hiddenOutputList = player.getHiddenOutputList(inp, hiddenWeights)
+        
+
+        hiddenErrorList = [0.0154, -0.0469]
+
+        hiddenNodeErrorTermsList = player.getHiddenNodeErrorTerms(hiddenOutputList, hiddenErrorList)
+        expectedList  = [0.0032, -0.0114]
+        for i in range(len(hiddenErrorList)):
+            self.assertAlmostEqual(hiddenNodeErrorTermsList[i], expectedList[i], delta=0.0001)
+
+    def testAdjustWeight(self):
+        player = AIPlayer(0)
+        self.assertAlmostEqual(player.adjustWeight(0.1, 0.0075, 1), 0.1038, delta=0.0001)
+
+    def testGetNodeIndex(self):
+        player = AIPlayer(0)
+        self.assertEqual(player.getNodeIndex(3), 0)
+        self.assertEqual(player.getNodeIndex(5), 1)
+        self.assertEqual(player.getNodeIndex(14), 2)
+        self.assertEqual(player.getNodeIndex(17), 3)
+        self.assertEqual(player.getNodeIndex(23), 4)
+        self.assertEqual(player.getNodeIndex(29), 5)
+        self.assertEqual(player.getNodeIndex(30), 6)
+        self.assertEqual(player.getNodeIndex(37), 7)
+
+    def testBackPropagate(self):
+        #40 weights for 8 neurons
+        hiddenWeights = [0.3415, -0.4910, 0.7999, 0.1322, -0.9931, 
+                         0.5132, -0.1122, -0.8483, 0.6340, 0.8888,
+                         0.1342, -0.9348, -0.1234, 0.4333, -0.1222,
+                         0.3937, -0.3882, 0.5555, 0.9294, 0.8726,
+                         0.3947, 0.9673, 0.4872, -0.8366, -0.2838,
+                         0.6333, -0.4522, 0.9983, 0.8272, 0.2333,
+                         0.3344, -0.5523, -0.9101, 0.3710, 0.3999,
+                         -0.1233, -0.3456, -0.3291, -0.9967, -0.8437]
+
+        #9 weights for one output
+        outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
+                         0.1022, -0.5234, -0.6444, -0.7291]
+        
 
 
-
-
-
+    #epoch series test
     def testNeuralNetwork(self):
         player = AIPlayer(0)
-        hiddenLayer = player.initWeights(40)
-        outputLayer = player.initWeights(9)
-        num = player.sig(1)
+        possibleInputs = [[0, 0, 0, 0, 0],
+                          [0, 0, 0, 1, 1],
+                          [0, 0, 1, 0, 0],
+                          [0, 0, 1, 1, 1],
+                          [0, 1, 0, 0, 0],
+                          [0, 1, 0, 1, 1],
+                          [0, 1, 1, 0, 0],
+                          [0, 1, 1, 1, 1],
+                          [1, 0, 0, 0, 1],
+                          [1, 0, 0, 1, 1],
+                          [1, 0, 1, 0, 1],
+                          [1, 0, 1, 1, 1],
+                          [1, 1, 0, 0, 0],
+                          [1, 1, 0, 1, 0],
+                          [1, 1, 1, 0, 0],
+                          [1, 1, 1, 1, 1]]
+
+        #pick 10 random inputs
+        testInputs = random.sample(possibleInputs, 10)
+
+        #hiddenLayer = player.initWeights(40)
+        #outputLayer = player.initWeights(9)
+
+        hiddenLayer = [0.3415, -0.4910, 0.7999, 0.1322, -0.9931, 
+                         0.5132, -0.1122, -0.8483, 0.6340, 0.8888,
+                         0.1342, -0.9348, -0.1234, 0.4333, -0.1222,
+                         0.3937, -0.3882, 0.5555, 0.9294, 0.8726,
+                         0.3947, 0.9673, 0.4872, -0.8366, -0.2838,
+                         0.6333, -0.4522, 0.9983, 0.8272, 0.2333,
+                         0.3344, -0.5523, -0.9101, 0.3710, 0.3999,
+                         -0.1233, -0.3456, -0.3291, -0.9967, -0.8437]
+
+        #9 weights for one output
+        outputLayer = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
+                         0.1022, -0.5234, -0.6444, -0.7291]
 
 
+        #for inp in testInputs:
+        #    inputs = inp[0:4]
+        #    expected = inp[5]
 
+        inp = possibleInputs[14]
+        keepGoing = True
+        #while keepGoing:
+        for i in range(190):
+            inputs = inp[0:4]
+            expected = inp[4]
+            newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+            error = newWeights[2]
+            print("Error: " + str(error))
+            if error < 0.05:
+                keepGoing = False
+            else:
+                hiddenLayer = newWeights[0]
+                outputLayer = newWeights[1]
