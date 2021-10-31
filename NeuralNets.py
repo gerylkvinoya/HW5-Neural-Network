@@ -406,7 +406,7 @@ class AIPlayer(Player):
         hiddenOutputList = self.getHiddenOutputList(inp, hiddenWeights)
 
         #"activate" the output node to get the overall output
-        return self.sig(self.activateNeuron(hiddenOutputList, outputWeights))
+        return self.activateNeuron(hiddenOutputList, outputWeights)
             
     #getErrorTerm
     #
@@ -724,52 +724,64 @@ class TestCreateNode(unittest.TestCase):
         #9 weights for one output
         outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
                          0.1022, -0.5234, -0.6444, -0.7291]
+        
 
 
-#epoch series test
-player = AIPlayer(0)
-possibleInputs = [[0, 0, 0, 0, 0],
-                    [0, 0, 0, 1, 1],
-                    [0, 0, 1, 0, 0],
-                    [0, 0, 1, 1, 1],
-                    [0, 1, 0, 0, 0],
-                    [0, 1, 0, 1, 1],
-                    [0, 1, 1, 0, 0],
-                    [0, 1, 1, 1, 1],
-                    [1, 0, 0, 0, 1],
-                    [1, 0, 0, 1, 1],
-                    [1, 0, 1, 0, 1],
-                    [1, 0, 1, 1, 1],
-                    [1, 1, 0, 0, 0],
-                    [1, 1, 0, 1, 0],
-                    [1, 1, 1, 0, 0],
-                    [1, 1, 1, 1, 1]]
+    #epoch series test
+    def testNeuralNetwork(self):
+        player = AIPlayer(0)
+        possibleInputs = [[0, 0, 0, 0, 0],
+                          [0, 0, 0, 1, 1],
+                          [0, 0, 1, 0, 0],
+                          [0, 0, 1, 1, 1],
+                          [0, 1, 0, 0, 0],
+                          [0, 1, 0, 1, 1],
+                          [0, 1, 1, 0, 0],
+                          [0, 1, 1, 1, 1],
+                          [1, 0, 0, 0, 1],
+                          [1, 0, 0, 1, 1],
+                          [1, 0, 1, 0, 1],
+                          [1, 0, 1, 1, 1],
+                          [1, 1, 0, 0, 0],
+                          [1, 1, 0, 1, 0],
+                          [1, 1, 1, 0, 0],
+                          [1, 1, 1, 1, 1]]
 
-#pick 10 random inputs
-testInputs = random.sample(possibleInputs, 10)
+        #pick 10 random inputs
+        testInputs = random.sample(possibleInputs, 10)
 
-#init random values
-hiddenLayer = player.initWeights(40)
-outputLayer = player.initWeights(9)
+        #hiddenLayer = player.initWeights(40)
+        #outputLayer = player.initWeights(9)
 
-keepGoing = True
-while keepGoing:
+        hiddenLayer = [0.3415, -0.4910, 0.7999, 0.1322, -0.9931, 
+                         0.5132, -0.1122, -0.8483, 0.6340, 0.8888,
+                         0.1342, -0.9348, -0.1234, 0.4333, -0.1222,
+                         0.3937, -0.3882, 0.5555, 0.9294, 0.8726,
+                         0.3947, 0.9673, 0.4872, -0.8366, -0.2838,
+                         0.6333, -0.4522, 0.9983, 0.8272, 0.2333,
+                         0.3344, -0.5523, -0.9101, 0.3710, 0.3999,
+                         -0.1233, -0.3456, -0.3291, -0.9967, -0.8437]
 
-    #this block of code represents one epoch
-    avgError = 0
-    for inp in testInputs:
-        inputs = inp[0:4]
-        expected = inp[4]
-        newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+        #9 weights for one output
+        outputLayer = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
+                         0.1022, -0.5234, -0.6444, -0.7291]
 
-        #add the absolute value of the error to the average error of the epoch
-        absError = abs(newWeights[2])
-        avgError += absError
 
-        #update the new layers
-        hiddenLayer = newWeights[0]
-        outputLayer = newWeights[1]
+        #for inp in testInputs:
+        #    inputs = inp[0:4]
+        #    expected = inp[5]
 
-    print("Average Error: " + str(avgError))
-    if avgError < 0.05:
-        keepGoing = False
+        inp = possibleInputs[14]
+        keepGoing = True
+        #while keepGoing:
+        for i in range(190):
+            inputs = inp[0:4]
+            expected = inp[4]
+            newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+            error = newWeights[2]
+            print("Error: " + str(error))
+            if error < 0.05:
+                keepGoing = False
+            else:
+                hiddenLayer = newWeights[0]
+                outputLayer = newWeights[1]
