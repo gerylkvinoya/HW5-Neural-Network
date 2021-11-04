@@ -42,7 +42,7 @@ class AIPlayer(Player):
     #   cpy           - whether the player is a copy (when playing itself)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets")
+        super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets_vinoya21_morganco23")
     
     ##
     #getPlacement
@@ -756,7 +756,7 @@ keepGoing = True
 while keepGoing:
 
     #this block of code represents one epoch
-    avgError = 0
+    errorSum = 0
     for inp in testInputs:
         inputs = inp[0:4]
         expected = inp[4]
@@ -764,11 +764,13 @@ while keepGoing:
 
         #add the absolute value of the error to the average error of the epoch
         absError = abs(newWeights[2])
-        avgError += absError
+        errorSum += absError
 
         #update the new layers
         hiddenLayer = newWeights[0]
         outputLayer = newWeights[1]
+
+    avgError = errorSum/len(testInputs)
 
     print("Average Error: " + str(avgError))
     if avgError < 0.05:
