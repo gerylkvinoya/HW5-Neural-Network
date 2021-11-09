@@ -526,8 +526,6 @@ class AIPlayer(Player):
         
 
         return [newHiddenWeights, newOutputWeights, error]
-        
-
 
     #getNodeIndex
     #
@@ -539,22 +537,9 @@ class AIPlayer(Player):
     #
     #return: index of node this weight belongs to
     def getNodeIndex(self, num):
-        if num < 5:
-            return 0
-        if num < 10:
-            return 1
-        if num < 15:
-            return 2
-        if num < 20:
-            return 3
-        if num < 25:
-            return 4
-        if num < 30:
-            return 5
-        if num < 35:
-            return 6
-        if num < 40:
-            return 7
+        #indexes 0 - 4 are in node 1, 5 - 9 are in node 2, etc...
+        return int(num/5)
+
 
 class TestCreateNode(unittest.TestCase):
 
