@@ -789,8 +789,8 @@ class TestCreateNode(unittest.TestCase):
 
 
 
-player = AIPlayer(0)
 
+player = AIPlayer(0)
 #will use 8 inputs
 #6 hidden nodes (9 weights per node = 54)
 #1 output node (7 weights)
