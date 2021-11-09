@@ -527,8 +527,6 @@ class AIPlayer(Player):
 
         return [newHiddenWeights, newOutputWeights, error]
         
-
-
     #getNodeIndex
     #
     #Description: given a number between 0 and 39,
@@ -555,6 +553,80 @@ class AIPlayer(Player):
             return 6
         if num < 40:
             return 7
+
+    def calculateInputs(self,inparr, currentState):
+        
+        me = currentState.whoseTurn
+        
+        myTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
+
+        numWorkers = len(getAntList(currentState,me,(WORKER,)))
+
+
+        if numWorkers > 1 :
+            inparr[0] = 1
+            inparr[1] = 1
+            inparr[2] = 0
+
+            worker = getAntList(currentState,me,(WORKER,))[0]
+
+            inparr[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
+        else:
+            inparr[0] = numWorkers
+            inparr[1] = 0
+            if numWorkers == 0:
+                inparr[2] = 0
+                inparr[3] = 1
+            else:
+
+                worker = getAntList(currentState,me,(WORKER,))[0]
+
+                inparr[2] = worker.carrying
+                inparr[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
+        
+
+        numSoldiers = len(getAntList(currentState, me, (SOLDIER,)))
+
+        if numSoldiers > 1:
+            inparr[4] = 1
+            inparr[5] = 1
+            inparr[6] = 1
+        else:
+            inparr[4] = numSoldiers
+            if numSoldiers == 0:
+                inparr[5] = 1
+                inparr[6] = 1
+            else:
+                mySoldier = getAntList(currentState,me,(SOLDIER,))[0]
+                enemyTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
+
+                inparr[5] = stepsToReach(currentState,mySoldier.coords,enemyTunnel.coords)/10
+                
+                enemyWorkers = getAntList(currentState,1-me,(WORKER,))
+
+                if len(enemyWorkers) > 0:
+                    inparr[6] = stepsToReach(currentState,mySoldier.coords,enemyWorkers[0].coords)/10
+                else:
+                    inparr[6] = 1
+                
+   
+        inparr[7] = len(getAntList(currentState,1-me,(WORKER,))) / 3
+
+
+
+
+####
+# list of inputs
+#
+# 0-number of workers: 0 or 1
+# 1-more than one worker 0(no) or 1(yes)
+# 2-is worker carrying food: 0(no) or 1(yes)
+# 3-worker distance from tunnel: 0(on the tunnel) to 1(10 turns away from the tunnel)
+# 4-number of soldiers we have: 0 or 1
+# 5-distance between soldier and enemy tunnel 0(on the enemy tunnel) to 1(10 turns away from enemy tunnel)
+# 6-distance between soldier and enemy worker(s) 0(next to enemy worker) to 1(10 turns away from enemy worker)
+# 7-number of enemy workers: 0(0) to 1(3 or more)
+
 
 class TestCreateNode(unittest.TestCase):
 
