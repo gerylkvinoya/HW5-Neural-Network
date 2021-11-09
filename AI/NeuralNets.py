@@ -600,7 +600,8 @@ class TestCreateNode(unittest.TestCase):
         inputs = [1, 0, 0, 1]
 
         output = player.getOutput(inputs, hiddenWeights, outputWeights)
-        self.assertAlmostEqual(output, -0.119949466871)
+        #CHECK to make sure this is the expected number
+        self.assertAlmostEqual(output, 0.4700, delta=0.0001)
 
     def testGetOutputEightNeurons(self):
         player = AIPlayer(0)
@@ -624,7 +625,8 @@ class TestCreateNode(unittest.TestCase):
         #round to 4 places, it's close enough after testing with 3 different sets of numbers
         aiOutput = round(player.getOutput(inputs, hiddenWeights, outputWeights), 4)
 
-        self.assertAlmostEqual(aiOutput, 0.4165, delta=0.001)
+        #CHECK to make sure this is the expected number
+        self.assertAlmostEqual(aiOutput, 0.6027, delta=0.001)
 
     def testGetErrorTerm(self):
         player = AIPlayer(0)
@@ -710,7 +712,54 @@ class TestCreateNode(unittest.TestCase):
         outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
                          0.1022, -0.5234, -0.6444, -0.7291]
 
+    def testNewNetwork(self):
+        player = AIPlayer(0)
 
+        #will use 8 inputs
+        #6 hidden nodes (9 weights per node = 54)
+        #1 output node (7 weights)
+
+        #some random numbers for the inputs
+        inputs = [1.0,
+                  0.0,
+                  0.0,
+                  0.1231,
+                  0,
+                  0.5192,
+                  0.0,
+                  0.3333]
+
+        hiddenLayer = player.initWeights(54)
+        outputLayer = player.initWeights(7)
+
+        keepGoing = True
+
+        while keepGoing:
+            #this block of code represents one epoch
+            errorSum = 0
+
+            #some random number for the expected
+            expected = 0.7823
+            newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+
+            #add the absolute value of the error to the average error of the epoch
+            absError = abs(newWeights[2])
+            errorSum += absError
+
+            #update the new layers
+            hiddenLayer = newWeights[0]
+            outputLayer = newWeights[1]
+
+            avgError = errorSum
+
+            print("Average Error: " + str(avgError))
+            if avgError < 0.05:
+                keepGoing = False
+
+
+        
+
+'''
 #epoch series test
 player = AIPlayer(0)
 possibleInputs = [[0, 0, 0, 0, 0],
@@ -760,3 +809,4 @@ while keepGoing:
     print("Average Error: " + str(avgError))
     if avgError < 0.05:
         keepGoing = False
+'''
