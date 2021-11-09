@@ -43,6 +43,8 @@ class AIPlayer(Player):
     ##
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets_vinoya21_morganco23")
+        self.gameStateList = []
+        self.trainingAI = True
     
     ##
     #getPlacement
@@ -117,6 +119,7 @@ class AIPlayer(Player):
 
         #create lists of all the moves and gameStates
         allMoves = listAllLegalMoves(currentState)
+        self.gameStateList.append(currentState)
         stateList = []
         nodeList = []
 
@@ -127,15 +130,29 @@ class AIPlayer(Player):
                 continue
 
             newState = getNextState(currentState, move)
-            stateList.append(newState)
 
-            node = {
-                'move' : move,
-                'state' : newState,
-                'depth' : 1,
-                'eval' : self.utility(newState),
-                'parent': currentState
-            }
+            node = None
+
+            if self.trainingAI:
+                stateList.append(newState)
+
+                node = {
+                    'move' : move,
+                    'state' : newState,
+                    'depth' : 1,
+                    'eval' : self.utility(newState),
+                    'parent': currentState
+                }
+                
+            else:
+                node = {
+                    'move' : move,
+                    'state' : newState,
+                    'depth' : 1,
+                    'eval' : self.neuralUtility(newState),
+                    'parent': currentState
+                }
+            
             nodeList.append(node)
         
         #get the move with the best eval through the nodeList
@@ -165,7 +182,54 @@ class AIPlayer(Player):
     # This agent doens't learn
     #
     def registerWin(self, hasWon):
-        #method templaste, not implemented
+
+        if self.trainingAI:
+            print("Game over! Training AI.")
+            
+            player = AIPlayer(0)
+            #will use 8 inputs
+            #6 hidden nodes (9 weights per node = 54)
+            #1 output node (7 weights)
+
+            if len(self.gameStateList) >= 50:
+                testGameStates = random.sample(self.gameStateList, 50)
+            else:
+                testGameStates = random.sample(self.gameStateList, len(self.gameStateList))
+
+            hiddenLayer = player.initWeights(54)
+            outputLayer = player.initWeights(7)
+
+            keepGoing = True
+
+            while keepGoing:
+                #this block of code represents one epoch
+                errorSum = 0
+
+                for state in self.gameStateList:
+                    #get the inputs for the current gamestate
+                    inputs = player.calculateInputs(state)
+
+                    #use the actual utility function for expected
+                    expected = player.utility(state)
+
+                    newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+
+                    #add the absolute value of the error to the average error of the epoch
+                    absError = abs(newWeights[2])
+                    errorSum += absError
+
+                    #update the new layers
+                    hiddenLayer = newWeights[0]
+                    outputLayer = newWeights[1]
+
+                avgError = errorSum/len(testGameStates)
+
+                print("Average Error: " + str(avgError))
+                if avgError < 0.01:
+                    keepGoing = False
+                    print(hiddenLayer)
+                    print(outputLayer)
+
         pass
 
     ##
@@ -544,8 +608,11 @@ class AIPlayer(Player):
         return int(num/9)
 
 
-    def calculateInputs(self,inparr, currentState):
+    def calculateInputs(self, currentState):
         
+        #create empty list of float inputs
+        inputs = [-1.0] * 8
+
         me = currentState.whoseTurn
         
         myTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
@@ -554,68 +621,104 @@ class AIPlayer(Player):
 
 
         if numWorkers > 1 :
-            inparr[0] = 1
-            inparr[1] = 1
-            inparr[2] = 0
+            inputs[0] = 1
+            inputs[1] = 1
+            inputs[2] = 0
 
             worker = getAntList(currentState,me,(WORKER,))[0]
 
-            inparr[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
+            inputs[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
         else:
-            inparr[0] = numWorkers
-            inparr[1] = 0
+            inputs[0] = numWorkers
+            inputs[1] = 0
             if numWorkers == 0:
-                inparr[2] = 0
-                inparr[3] = 1
+                inputs[2] = 0
+                inputs[3] = 1
             else:
 
                 worker = getAntList(currentState,me,(WORKER,))[0]
 
-                inparr[2] = worker.carrying
-                inparr[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
+                inputs[2] = worker.carrying
+                inputs[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
         
 
         numSoldiers = len(getAntList(currentState, me, (SOLDIER,)))
 
         if numSoldiers > 1:
-            inparr[4] = 1
-            inparr[5] = 1
-            inparr[6] = 1
+            inputs[4] = 1
+            inputs[5] = 1
+            inputs[6] = 1
         else:
-            inparr[4] = numSoldiers
+            inputs[4] = numSoldiers
             if numSoldiers == 0:
-                inparr[5] = 1
-                inparr[6] = 1
+                inputs[5] = 1
+                inputs[6] = 1
             else:
                 mySoldier = getAntList(currentState,me,(SOLDIER,))[0]
                 enemyTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
 
-                inparr[5] = stepsToReach(currentState,mySoldier.coords,enemyTunnel.coords)/10
+                inputs[5] = stepsToReach(currentState,mySoldier.coords,enemyTunnel.coords)/10
                 
                 enemyWorkers = getAntList(currentState,1-me,(WORKER,))
 
                 if len(enemyWorkers) > 0:
-                    inparr[6] = stepsToReach(currentState,mySoldier.coords,enemyWorkers[0].coords)/10
+                    inputs[6] = stepsToReach(currentState,mySoldier.coords,enemyWorkers[0].coords)/10
                 else:
-                    inparr[6] = 1
+                    inputs[6] = 1
                 
    
-        inparr[7] = len(getAntList(currentState,1-me,(WORKER,))) / 3
+        inputs[7] = len(getAntList(currentState,1-me,(WORKER,))) / 3
 
+        return inputs
 
+    ####
+    # list of inputs
+    #
+    # 0-number of workers: 0 or 1
+    # 1-more than one worker 0(no) or 1(yes)
+    # 2-is worker carrying food: 0(no) or 1(yes)
+    # 3-worker distance from tunnel: 0(on the tunnel) to 1(10 turns away from the tunnel)
+    # 4-number of soldiers we have: 0 or 1
+    # 5-distance between soldier and enemy tunnel 0(on the enemy tunnel) to 1(10 turns away from enemy tunnel)
+    # 6-distance between soldier and enemy worker(s) 0(next to enemy worker) to 1(10 turns away from enemy worker)
+    # 7-number of enemy workers: 0(0) to 1(3 or more)
 
+    #neuralUtility
+    #
+    #Description: use the given weights to find a new utility
+    #
+    #Parameters:
+    #   currentState - state of the game
+    #
+    #return: float from 0...1 depending on how "good" a gamestate is
+    def neuralUtility(self, currentState):
+        #hardcoded weights after training
+        hiddenLayer = [-0.17167587773484522, 0.7132997187730417, 0.5282457479823861,
+                       -0.5120567902440387, -0.378779538062124, 0.2879368612314914,
+                       0.8178181018999081, -0.40944393190208445, 0.22708482512001926,
+                       -0.7462037149433325, -0.6421934542862962, 0.29960210956363786,
+                       -0.28198143334186687, 0.6792315307097105, 0.11544072173775644,
+                       -0.18143800865790596, -0.5796751300072001, -0.07027140685268685,
+                       0.22133864289880345, 0.5483783985106618, 0.3192577280496409,
+                       0.4375164277743431, 1.014436492562861, -0.529771803482253,
+                       0.787344438968606, 0.7949751737685353, 0.40618517065103976,
+                       0.6356026927195592, -0.8139028896856813, -0.6449537235087837,
+                       -0.770779652274505, -0.8975494576871913, 0.4988987766187356,
+                       0.9311472328541835, -0.08912659089752076, -0.44539570866640066,
+                       0.9272352113357694, 0.6756547046645998, 0.6993778255347556,
+                       -0.7264619376199315, 0.4359007012146315, 0.42586000973590554,
+                       -0.6191621069020667, 0.7365960620568333, -0.30504916797892845,
+                       -0.5008684753554068, -0.631277501116529, 0.181607659321543,
+                       -0.2360013644930632, 1.1010760570040692, 0.6463869525192396,
+                       -0.6255935562069775, 0.6883239523625014, 0.7306864518887675]
 
-####
-# list of inputs
-#
-# 0-number of workers: 0 or 1
-# 1-more than one worker 0(no) or 1(yes)
-# 2-is worker carrying food: 0(no) or 1(yes)
-# 3-worker distance from tunnel: 0(on the tunnel) to 1(10 turns away from the tunnel)
-# 4-number of soldiers we have: 0 or 1
-# 5-distance between soldier and enemy tunnel 0(on the enemy tunnel) to 1(10 turns away from enemy tunnel)
-# 6-distance between soldier and enemy worker(s) 0(next to enemy worker) to 1(10 turns away from enemy worker)
-# 7-number of enemy workers: 0(0) to 1(3 or more)
+        outputLayer = [-0.857412549866711, -1.0304107852348676, -0.33699243214195007,
+                       -1.2889961906742138, -0.6519996526143456, -0.9106643208722996,
+                       -1.167273124148147]
+        
+        inputs = self.calculateInputs(currentState)
+
+        return self.getOutput(inputs, hiddenLayer, outputLayer)
 
 
 class TestCreateNode(unittest.TestCase):
@@ -791,36 +894,27 @@ class TestCreateNode(unittest.TestCase):
 
 
 player = AIPlayer(0)
+gameState = GameState.getBasicState()
+
 #will use 8 inputs
 #6 hidden nodes (9 weights per node = 54)
 #1 output node (7 weights)
 
 #some random numbers for the inputs
-inputs = [1.0,
-            0.0,
-            0.0,
-            0.1231,
-            0,
-            0.5192,
-            0.0,
-            0.3333]
+inputs = player.calculateInputs(gameState)
 
 hiddenLayer = player.initWeights(54)
 outputLayer = player.initWeights(7)
 
-print(len(hiddenLayer))
-print(hiddenLayer)
-print(len(outputLayer))
-print(outputLayer)
-
-keepGoing = True
+#setting keepGoing to false because we don't need to backpropagate at the moment
+keepGoing = False
 
 while keepGoing:
     #this block of code represents one epoch
     errorSum = 0
 
-    #some random number for the expected
-    expected = 0.7823
+    #use the actual utility function for expected
+    expected = player.utility(gameState)
     newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
 
     #add the absolute value of the error to the average error of the epoch
@@ -834,8 +928,10 @@ while keepGoing:
     avgError = errorSum
 
     print("Average Error: " + str(avgError))
-    if avgError < 0.05:
+    if avgError < 0.0001:
         keepGoing = False
+        print(hiddenLayer)
+        print(outputLayer)
 
 
         
