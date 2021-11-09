@@ -366,14 +366,17 @@ class AIPlayer(Player):
         #list of numbers after using sig function (should be of size 8)
         hiddenOutputList = []
 
-        if (len(hiddenWeights) % 5) != 0:
-            print("len(hiddenWeights) not divisible by 5")
+        #changed from 5 to 9
+        if (len(hiddenWeights) % 9) != 0:
+            print("len(hiddenWeights) not divisible by 9")
+            print(len(hiddenWeights))
 
-        #get every 5 elements of the weights and put that in list to use self.activateNeuron on
-        #len(hiddenWeights) should at least be divisible by 5; 5 weights represent a neuron
-        for i in range(0, len(hiddenWeights), 5):
+        #get every 9 elements of the weights and put that in list to use self.activateNeuron on
+        #len(hiddenWeights) should at least be divisible by 9; 9 weights represent a neuron
+        for i in range(0, len(hiddenWeights), 9):
             activation = self.activateNeuron(inputs, [hiddenWeights[i], hiddenWeights[i+1], 
-                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]])
+                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4], hiddenWeights[i+5],
+                hiddenWeights[i+6], hiddenWeights[i+7], hiddenWeights[i+8]])
 
             hiddenOutputList.append(self.sig(activation))
 
@@ -515,7 +518,7 @@ class AIPlayer(Player):
         #start with the hidden weights
         for i in range(0, len(hiddenWeights), 1):
             node = self.getNodeIndex(i)
-            inputIndex = i % 5
+            inputIndex = i % 9
             newHiddenWeights.append(self.adjustWeight(hiddenWeights[i], hiddenErrorTerms[node], inputs[inputIndex]))
         
         #insert a 1 at the beginning for the bias
@@ -538,7 +541,7 @@ class AIPlayer(Player):
     #return: index of node this weight belongs to
     def getNodeIndex(self, num):
         #indexes 0 - 4 are in node 1, 5 - 9 are in node 2, etc...
-        return int(num/5)
+        return int(num/9)
 
 
 class TestCreateNode(unittest.TestCase):
@@ -688,14 +691,12 @@ class TestCreateNode(unittest.TestCase):
 
     def testGetNodeIndex(self):
         player = AIPlayer(0)
+        #changing to account for 9 weights
         self.assertEqual(player.getNodeIndex(3), 0)
-        self.assertEqual(player.getNodeIndex(5), 1)
-        self.assertEqual(player.getNodeIndex(14), 2)
-        self.assertEqual(player.getNodeIndex(17), 3)
-        self.assertEqual(player.getNodeIndex(23), 4)
-        self.assertEqual(player.getNodeIndex(29), 5)
-        self.assertEqual(player.getNodeIndex(30), 6)
-        self.assertEqual(player.getNodeIndex(37), 7)
+        self.assertEqual(player.getNodeIndex(5), 0)
+        self.assertEqual(player.getNodeIndex(14), 1)
+        self.assertEqual(player.getNodeIndex(17), 1)
+        self.assertEqual(player.getNodeIndex(23), 2)
 
     def testBackPropagate(self):
         #40 weights for 8 neurons
@@ -712,49 +713,55 @@ class TestCreateNode(unittest.TestCase):
         outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
                          0.1022, -0.5234, -0.6444, -0.7291]
 
-    def testNewNetwork(self):
-        player = AIPlayer(0)
 
-        #will use 8 inputs
-        #6 hidden nodes (9 weights per node = 54)
-        #1 output node (7 weights)
 
-        #some random numbers for the inputs
-        inputs = [1.0,
-                  0.0,
-                  0.0,
-                  0.1231,
-                  0,
-                  0.5192,
-                  0.0,
-                  0.3333]
+player = AIPlayer(0)
 
-        hiddenLayer = player.initWeights(54)
-        outputLayer = player.initWeights(7)
+#will use 8 inputs
+#6 hidden nodes (9 weights per node = 54)
+#1 output node (7 weights)
 
-        keepGoing = True
+#some random numbers for the inputs
+inputs = [1.0,
+            0.0,
+            0.0,
+            0.1231,
+            0,
+            0.5192,
+            0.0,
+            0.3333]
 
-        while keepGoing:
-            #this block of code represents one epoch
-            errorSum = 0
+hiddenLayer = player.initWeights(54)
+outputLayer = player.initWeights(7)
 
-            #some random number for the expected
-            expected = 0.7823
-            newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
+print(len(hiddenLayer))
+print(hiddenLayer)
+print(len(outputLayer))
+print(outputLayer)
 
-            #add the absolute value of the error to the average error of the epoch
-            absError = abs(newWeights[2])
-            errorSum += absError
+keepGoing = True
 
-            #update the new layers
-            hiddenLayer = newWeights[0]
-            outputLayer = newWeights[1]
+while keepGoing:
+    #this block of code represents one epoch
+    errorSum = 0
 
-            avgError = errorSum
+    #some random number for the expected
+    expected = 0.7823
+    newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
 
-            print("Average Error: " + str(avgError))
-            if avgError < 0.05:
-                keepGoing = False
+    #add the absolute value of the error to the average error of the epoch
+    absError = abs(newWeights[2])
+    errorSum += absError
+
+    #update the new layers
+    hiddenLayer = newWeights[0]
+    outputLayer = newWeights[1]
+
+    avgError = errorSum
+
+    print("Average Error: " + str(avgError))
+    if avgError < 0.05:
+        keepGoing = False
 
 
         
