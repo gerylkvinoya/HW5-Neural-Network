@@ -44,10 +44,10 @@ class AIPlayer(Player):
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets_vinoya21_morganco23")
         self.gameStateList = []
-        self.trainingAI = True
-        self.hiddenLayer = [-0.13646184266804956, 0.5562580320075567, -0.4952711178922091, 0.39552672155682606, -1.5527048299553063, -0.08541657656665806, -0.7113980337204617, -0.7803317983661627, -1.4852520825550188, -0.015363107650408735, 0.4574835147123121, 0.7155152562465714, -2.108195333510599, -1.735140323161021, -0.10459647322532865, 0.8971098475318402, -0.13643608416094408, 2.443178096311764, -1.625391371681269, -0.11115039290776015, 0.6453022586477051, -1.2074930594142461, -2.844244269057061, 1.8406392583606266, -0.23560282443347716, -1.2402212776482628, 5.092421943270691, -0.9470872439908149, -0.7306545158774931, -0.08990677298086003, -0.1983358799536411, 0.30705450808195206, 0.44954535826149106, 0.5553744934793984, -0.6238600414834894, -0.2862363020775325, 0.7018793621621676, -1.0457718170461692, -0.9745750738278243, 0.08709149554334703, 1.9505872753220619, -0.6371855984420822, -0.07241514011445602, 
-                            0.5729953393464275, -5.598427047482778, -2.3337080586228014, -1.7333858708988703, -0.3544621772659615, -0.05078322059537869, 0.3436204253433222, 1.5977801403096854, 0.1458423448404688, -0.645879838892713, -4.001444217737032]
-        self.outputLayer = [0.6192989897925637, -1.2044107455402349, -1.609876580974279, 3.0659286297544006, -0.207748432802271, 4.2957988555549935, 2.9224603381274816]
+        self.trainingAI = False
+        self.hiddenLayer = [0.8219066024454105, -0.9835603916085868, -0.2550000074221794, 0.3467017949416797, -0.02979686303799146, -1.2951386956179647, -0.60743875417383, -0.5285435630126529, 0.224663263433739, -0.7166697958721399, -0.5347138283025262, 0.6657639408600032, -0.5003754218219909, 0.7614368749632836, 0.5181324637140722, 0.36093235343347496, 0.8078031140164182, 0.6563292688861689, 0.45174890922102673, 0.6222864061210843, 0.3166886920709504, -0.8966685193796649, -0.12469299684251174, 0.5971298481617191, 0.053414100705435306, -0.0642779684399614, -0.569434575675846, 0.13336878933017782, -0.7176503730989361, -0.9206912584312159, -1.1488020720771956, 
+                            0.07692751116150676, 0.1929331075653529, 0.6413610608306726, 0.055086218325451235, 0.5370691053442583, 0.24376132365065858, 0.2916910784257264, -0.5403330269533996, -0.9376172778499439]
+        self.outputLayer = [-0.03930064843838012, -0.5254829477702588, 1.464679348174604, 0.46984391088405447, 0.7685979336638357, 0.17438706411939478, 0.5126261205000846, 0.7991301699285988, -1.0728201864278921]
         #backups
         #hiddenLayer = [0.0846823655533066, 0.777402240228925, -0.4952711178922091, 0.7955426985421822, -0.34047766832833126, -0.6341186845957503, -0.48334718300436874, 0.10105274208395049, -1.5051809801497023, 0.35095739282477867, 0.8238040151874945, 0.7155152562465714, -1.0780880866926819, -0.7280217514583914, 0.27416790915727185, 0.7521548860007751, 0.33071524481196446, 0.9220924381251523, -0.8608065118060985, 0.6534344669672828, 0.6453022586477051, -0.27462492395406896, -0.10778443651707982, 1.1535460021655561, 0.5604186039295797, -0.6982549905496046, 1.9129618424120673, -0.7351593220516571, -0.5187265939383353, -0.08990677298086003, -0.2652465608771749, 0.5711741776232789, 0.5844182374202264, 0.5511194795047651, -0.5366756171486609, 0.0707750954526135, -0.33615638312374274, -2.0838075623321055, -0.9745750738278243, 0.2817166832292269, -0.28221130399789196, 1.092123124450522, -1.419826191082132, -0.3811764596668977, -3.2896959458827664, -1.448114723199332, -0.8477925354755759, -0.3544621772659615, 0.407958499364358, -0.3683205168012522, 2.505467035404279, 0.04043130101561472, -0.962495686580644, -2.2243079409110877]
         #outputLayer = 
@@ -232,7 +232,7 @@ class AIPlayer(Player):
                 avgError = errorSum/len(testGameStates)
 
                 print("Average Error: " + str(avgError))
-                if avgError < 0.015:
+                if avgError < 0.05:
                     keepGoing = False
                     print(self.hiddenLayer)
                     print(self.outputLayer)
@@ -438,16 +438,16 @@ class AIPlayer(Player):
         hiddenOutputList = []
 
         #changed from 5 to 9
-        if (len(hiddenWeights) % 9) != 0:
-            print("len(hiddenWeights) not divisible by 9")
+        if (len(hiddenWeights) % 5) != 0:
+            print("len(hiddenWeights) not divisible by 5")
             print(len(hiddenWeights))
 
         #get every 9 elements of the weights and put that in list to use self.activateNeuron on
         #len(hiddenWeights) should at least be divisible by 9; 9 weights represent a neuron
-        for i in range(0, len(hiddenWeights), 9):
+        for i in range(0, len(hiddenWeights), 5):
             activation = self.activateNeuron(inputs, [hiddenWeights[i], hiddenWeights[i+1], 
-                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4], hiddenWeights[i+5],
-                hiddenWeights[i+6], hiddenWeights[i+7], hiddenWeights[i+8]])
+                hiddenWeights[i+2], hiddenWeights[i+3], hiddenWeights[i+4]])
+                #, hiddenWeights[i+5], hiddenWeights[i+6], hiddenWeights[i+7], hiddenWeights[i+8]]
 
             hiddenOutputList.append(self.sig(activation))
 
@@ -589,7 +589,7 @@ class AIPlayer(Player):
         #start with the hidden weights
         for i in range(0, len(hiddenWeights), 1):
             node = self.getNodeIndex(i)
-            inputIndex = i % 9
+            inputIndex = i % 5
             newHiddenWeights.append(self.adjustWeight(hiddenWeights[i], hiddenErrorTerms[node], inputs[inputIndex]))
         
         #insert a 1 at the beginning for the bias
@@ -612,71 +612,105 @@ class AIPlayer(Player):
     #return: index of node this weight belongs to
     def getNodeIndex(self, num):
         #indexes 0 - 4 are in node 1, 5 - 9 are in node 2, etc...
-        return int(num/9)
+        return int(num/5)
 
 
     def calculateInputs(self, currentState):
         
         #create empty list of float inputs
-        inputs = [-1.0] * 8
+        inputs = [-1.0] * 4
 
+        WEIGHT = 10 #weight value for moves
+
+        #get my id and enemy id
         me = currentState.whoseTurn
-        
-        myTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
+        enemy = 1 - me
 
-        numWorkers = len(getAntList(currentState,me,(WORKER,)))
+        #get the values of the anthill, tunnel, and foodcount
+        myTunnel = getConstrList(currentState, me, (TUNNEL,))[0]
+        myAnthill = getConstrList(currentState, me, (ANTHILL,))[0]
+        myFoodList = getConstrList(currentState, 2, (FOOD,))
+        enemyTunnel = getConstrList(currentState, enemy, (TUNNEL,))[0]
 
+        #get my soldiers and workers
+        mySoldiers = getAntList(currentState, me, (SOLDIER,))
+        myWorkerList = getAntList(currentState, me, (WORKER,))
 
-        if numWorkers > 1 :
-            inputs[0] = 1
-            inputs[1] = 1
-            inputs[2] = 0
+        #get enemy worker and queen
+        enemyWorkerList = getAntList(currentState, enemy, (WORKER,))
+        enemyQueenList = getAntList(currentState, enemy, (QUEEN,))
 
-            worker = getAntList(currentState,me,(WORKER,))[0]
+        workerUtil = 0.0
 
-            inputs[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
-        else:
-            inputs[0] = numWorkers
-            inputs[1] = 0
-            if numWorkers == 0:
-                inputs[2] = 0
-                inputs[3] = 1
+        for worker in myWorkerList:
+
+            #if a worker is carrying food, go to tunnel
+            if worker.carrying:
+                tunnelDist = stepsToReach(currentState, worker.coords, myTunnel.coords)
+                #anthillDist = stepsToReach(currentState, worker.coords, myAnthill.coords)
+
+                #if tunnelDist <= anthillDist:
+                workerUtil = workerUtil + (1 / (tunnelDist + (4 * WEIGHT)))
+                #else:
+                    #toRet = toRet + (1 / (anthillDist + (4 * WEIGHT)))
+
+                #add to the eval if a worker is carrying food
+                workerUtil = workerUtil + (1 / WEIGHT)
+
+            #if a worker isn't carrying food, get to the food
             else:
-
-                worker = getAntList(currentState,me,(WORKER,))[0]
-
-                inputs[2] = worker.carrying
-                inputs[3] = stepsToReach(currentState, worker.coords, myTunnel.coords) / 10
+                foodDist = 1000
+                for food in myFoodList:
+                    # Updates the distance if its less than the current distance
+                    dist = stepsToReach(currentState, worker.coords, food.coords)
+                    if (dist < foodDist):
+                        foodDist = dist
+                workerUtil = workerUtil + (1 / (foodDist + (4 * WEIGHT)))
         
+        inputs[0] = workerUtil
 
-        numSoldiers = len(getAntList(currentState, me, (SOLDIER,)))
-
-        if numSoldiers > 1:
-            inputs[4] = 1
-            inputs[5] = 1
-            inputs[6] = 1
+        #try to get only 1 worker
+        if len(myWorkerList) == 1:
+            inputs[1] = (2 / WEIGHT)
+        
         else:
-            inputs[4] = numSoldiers
-            if numSoldiers == 0:
-                inputs[5] = 1
-                inputs[6] = 1
+            inputs[1] = 0.0
+        
+        soldierUtil = 0.0
+
+        #try to get only one soldier
+        if len(mySoldiers) == 1:
+            soldierUtil = soldierUtil +  (WEIGHT * 0.2)
+            enemyWorkerLength = len(enemyWorkerList)
+            enemyQueenLength = len(enemyQueenList)
+            
+
+
+            #we want the soldier to go twoards the enemy tunnel/workers
+            if enemyWorkerList:
+                distToEnemyWorker = stepsToReach(currentState, mySoldiers[0].coords, enemyWorkerList[0].coords)
+                distToEnemyTunnel = stepsToReach(currentState, mySoldiers[0].coords, enemyTunnel.coords)
+                soldierUtil = soldierUtil + (1 / (distToEnemyWorker + (WEIGHT * 0.2))) + (1 / (distToEnemyTunnel + (WEIGHT * 0.5)))
+            
+            #reward the agent for killing enemy workers
+            #try to kill the queen if enemy workers dead
             else:
-                mySoldier = getAntList(currentState,me,(SOLDIER,))[0]
-                enemyTunnel = getConstrList(currentState,me,(TUNNEL,))[0]
+                soldierUtil = soldierUtil + (2 * WEIGHT)
+                if enemyQueenLength > 0:
+                    enemyQueenDist = stepsToReach(currentState, mySoldiers[0].coords, enemyQueenList[0].coords)
+                    soldierUtil = soldierUtil + (1 / (1 + enemyQueenDist))
+            
 
-                inputs[5] = stepsToReach(currentState,mySoldier.coords,enemyTunnel.coords)/10
-                
-                enemyWorkers = getAntList(currentState,1-me,(WORKER,))
+            soldierUtil = soldierUtil + (1 / (enemyWorkerLength + 1)) + (1 / (enemyQueenLength + 1))
 
-                if len(enemyWorkers) > 0:
-                    inputs[6] = stepsToReach(currentState,mySoldier.coords,enemyWorkers[0].coords)/10
-                else:
-                    inputs[6] = 1
-                
-   
-        inputs[7] = len(getAntList(currentState,1-me,(WORKER,))) / 3
+        inputs[2] = soldierUtil
+
+        #try to get higher food score
+        foodCount = currentState.inventories[me].foodCount
+        inputs[3] = foodCount/11
 
         return inputs
+
 
     ####
     # list of inputs
@@ -886,8 +920,15 @@ gameState = GameState.getBasicState()
 #some random numbers for the inputs
 inputs = player.calculateInputs(gameState)
 
-hiddenLayer = player.initWeights(54)
-outputLayer = player.initWeights(7)
+#print(player.utility(gameState))
+
+#print(inputs)
+
+hiddenLayer = player.initWeights(40)
+outputLayer = player.initWeights(9)
+
+#print(hiddenLayer)
+#print(outputLayer)
 
 #setting keepGoing to false because we don't need to backpropagate at the moment
 keepGoing = False
