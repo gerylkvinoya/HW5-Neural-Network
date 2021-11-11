@@ -45,11 +45,8 @@ class AIPlayer(Player):
         super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets_vinoya21_morganco23")
         self.gameStateList = []
         self.trainingAI = False
-        self.hiddenLayer = [0.8292793736805087, -0.9816558372619123, -0.25204338259287373, 0.32896382802305574, -0.06138769109797808, -1.3220129169523402, -0.6145771310273964, -0.5424189863950047, 0.30895588833530496, -0.594211265348123, -0.5540151933953038, 0.6630202675434556, -0.5057137933162762, 0.7510887616662176, 0.5444873955138494, 0.32872444640873205, 0.8035601269068479, 0.6475820664294348, 0.4369084453798108, 0.6585981953996399, 0.31002306721353723, -0.8976083889673571, -0.12655065591320894, 0.6014456536701224, 0.06336218191682733, -0.08605176241014033, -0.5718977138076038, 0.12842664547275326, -0.7363887860676054, -0.9052397996481198, -1.1565506659998397, 0.07340283197137558, 0.18694341869213135, 0.6866036650282099, 0.12949826696999778, 0.5868515582958741, 0.2514749830624962, 0.30668574311461366, -0.4804645069867547, -1.0181439077417618]
-        self.outputLayer = [-0.01851110418327369, -0.47541203469256976, 1.4699557308780922, 0.5886424301921384, 0.85285149884216, 0.2467713531531556, 0.42594363422646303, 0.8972556583568002, -1.210614695153473]
-        #backups
-        #hiddenLayer = [0.0846823655533066, 0.777402240228925, -0.4952711178922091, 0.7955426985421822, -0.34047766832833126, -0.6341186845957503, -0.48334718300436874, 0.10105274208395049, -1.5051809801497023, 0.35095739282477867, 0.8238040151874945, 0.7155152562465714, -1.0780880866926819, -0.7280217514583914, 0.27416790915727185, 0.7521548860007751, 0.33071524481196446, 0.9220924381251523, -0.8608065118060985, 0.6534344669672828, 0.6453022586477051, -0.27462492395406896, -0.10778443651707982, 1.1535460021655561, 0.5604186039295797, -0.6982549905496046, 1.9129618424120673, -0.7351593220516571, -0.5187265939383353, -0.08990677298086003, -0.2652465608771749, 0.5711741776232789, 0.5844182374202264, 0.5511194795047651, -0.5366756171486609, 0.0707750954526135, -0.33615638312374274, -2.0838075623321055, -0.9745750738278243, 0.2817166832292269, -0.28221130399789196, 1.092123124450522, -1.419826191082132, -0.3811764596668977, -3.2896959458827664, -1.448114723199332, -0.8477925354755759, -0.3544621772659615, 0.407958499364358, -0.3683205168012522, 2.505467035404279, 0.04043130101561472, -0.962495686580644, -2.2243079409110877]
-        #outputLayer = 
+        self.hiddenLayer = [0.7440262765351734, -0.9263734531650161, -0.2693780622444827, 0.4873151842206883, -0.5546278420215437, -1.3977316860860203, -0.7126718638689291, -0.5570495920050431, -0.28469375418247966, 0.24357145305110967, -0.3816716889194897, 0.5862930794979195, -0.4705976642262143, 0.4921496410784487, 1.3315678479714632, 0.023914442424488983, 0.6782232292708787, 0.5880637513814154, 0.08748050447562752, 1.663674912696775, 0.3072798068974697, -0.9328377911514482, -0.12696819240025736, 0.5362200117558068, 0.34574153470569147, -0.11269735305859864, -0.5965895594254477, 0.12309651785445573, -0.8121467596053715, -0.7231709761801146, -1.0264114710588996, 0.0020418644883587965, 0.21404265500727532, 0.1387660497485834, 0.9236454876526518, 0.12742511042752017, 0.4286035575497551, 0.21323810250359457, -0.41298316714863875, -3.0248104627431]
+        self.outputLayer = [-0.006145256656514007, -0.7261538867209067, 1.406963331479567, 1.1026424530675896, 1.685160456032196, 0.3578803268101893, -0.00864113195512847, 1.1209762037675355, -2.953137735513422]
     
     ##
     #getPlacement
@@ -139,6 +136,7 @@ class AIPlayer(Player):
 
             node = None
 
+            #if we are training the AI, append to the stateList and use the original utility
             if self.trainingAI:
                 stateList.append(newState)
 
@@ -150,6 +148,7 @@ class AIPlayer(Player):
                     'parent': currentState
                 }
                 
+            #else, use the hard-coded weights and the neuralUtility function
             else:
                 node = {
                     'move' : move,
@@ -189,28 +188,18 @@ class AIPlayer(Player):
     #
     def registerWin(self, hasWon):
 
+        #if we are training, run through a series of epochs
         if self.trainingAI:
-            print("Game over! Training AI.")
-            
             player = AIPlayer(0)
-            #will use 8 inputs
-            #6 hidden nodes (9 weights per node = 54)
-            #1 output node (7 weights)
 
+            #shuffle the game states list as suggested in the hw pdf
             testGameStates = self.gameStateList
-
             random.shuffle(testGameStates)
-
-            #hiddenLayer = player.initWeights(54)
-            #outputLayer = player.initWeights(7)
         
-
+            #loops until we reach a certain threshold for average error
             keepGoing = True
-
             while keepGoing:
-                #this block of code represents one epoch
                 errorSum = 0
-
                 for state in testGameStates:
                     #get the inputs for the current gamestate
                     inputs = player.calculateInputs(state)
@@ -231,12 +220,10 @@ class AIPlayer(Player):
                 avgError = errorSum/len(testGameStates)
 
                 print("Average Error: " + str(avgError))
-                if avgError < 0.05:
+                if avgError < 0.01:
                     keepGoing = False
                     print(self.hiddenLayer)
                     print(self.outputLayer)
-
-        pass
 
     ##
     #utility
@@ -280,12 +267,8 @@ class AIPlayer(Player):
             #if a worker is carrying food, go to tunnel
             if worker.carrying:
                 tunnelDist = stepsToReach(currentState, worker.coords, myTunnel.coords)
-                #anthillDist = stepsToReach(currentState, worker.coords, myAnthill.coords)
 
-                #if tunnelDist <= anthillDist:
                 toRet = toRet + (1 / (tunnelDist + (4 * WEIGHT)))
-                #else:
-                    #toRet = toRet + (1 / (anthillDist + (4 * WEIGHT)))
 
                 #add to the eval if a worker is carrying food
                 toRet = toRet + (1 / WEIGHT)
@@ -304,7 +287,6 @@ class AIPlayer(Player):
         if len(myWorkerList) == 1:
             toRet = toRet + (2 / WEIGHT)
         
-
         #try to get only one soldier
         if len(mySoldiers) == 1:
             toRet = toRet + (WEIGHT * 0.2)
@@ -562,10 +544,9 @@ class AIPlayer(Player):
     #return: list of list of two new hidden and output weight lists
     def backPropagate(self, inp, target, hiddenWeights, outputWeights):
 
-        
-
         #calculate output
         output = self.getOutput(inp, hiddenWeights, outputWeights)
+
         #calculate error term
         error = target - output
         outputErrorTerm = self.getErrorTerm(error, output)
@@ -596,8 +577,7 @@ class AIPlayer(Player):
         for i in range(0, len(outputWeights), 1):
             newOutputWeights.append(self.adjustWeight(outputWeights[i], outputErrorTerm, hiddenOutputList[i]))
 
-        
-
+        #return as a list
         return [newHiddenWeights, newOutputWeights, error]
         
     #getNodeIndex
@@ -613,7 +593,14 @@ class AIPlayer(Player):
         #indexes 0 - 4 are in node 1, 5 - 9 are in node 2, etc...
         return int(num/5)
 
-
+    #calculateInputs
+    #
+    #Description: calculates the inputs used in a utility function based off of the gamestate
+    #
+    #Parameters:
+    #   num - index of the weight
+    #
+    #return: index of node this weight belongs to
     def calculateInputs(self, currentState):
         
         #create empty list of float inputs
@@ -646,14 +633,9 @@ class AIPlayer(Player):
             #if a worker is carrying food, go to tunnel
             if worker.carrying:
                 tunnelDist = stepsToReach(currentState, worker.coords, myTunnel.coords)
-                #anthillDist = stepsToReach(currentState, worker.coords, myAnthill.coords)
 
-                #if tunnelDist <= anthillDist:
                 workerUtil = workerUtil + (1 / (tunnelDist + (4 * WEIGHT)))
-                #else:
-                    #toRet = toRet + (1 / (anthillDist + (4 * WEIGHT)))
 
-                #add to the eval if a worker is carrying food
                 workerUtil = workerUtil + (1 / WEIGHT)
 
             #if a worker isn't carrying food, get to the food
@@ -683,8 +665,6 @@ class AIPlayer(Player):
             enemyWorkerLength = len(enemyWorkerList)
             enemyQueenLength = len(enemyQueenList)
             
-
-
             #we want the soldier to go twoards the enemy tunnel/workers
             if enemyWorkerList:
                 distToEnemyWorker = stepsToReach(currentState, mySoldiers[0].coords, enemyWorkerList[0].coords)
@@ -709,19 +689,6 @@ class AIPlayer(Player):
         inputs[3] = foodCount/11
 
         return inputs
-
-
-    ####
-    # list of inputs
-    #
-    # 0-number of workers: 0 or 1
-    # 1-more than one worker 0(no) or 1(yes)
-    # 2-is worker carrying food: 0(no) or 1(yes)
-    # 3-worker distance from tunnel: 0(on the tunnel) to 1(10 turns away from the tunnel)
-    # 4-number of soldiers we have: 0 or 1
-    # 5-distance between soldier and enemy tunnel 0(on the enemy tunnel) to 1(10 turns away from enemy tunnel)
-    # 6-distance between soldier and enemy worker(s) 0(next to enemy worker) to 1(10 turns away from enemy worker)
-    # 7-number of enemy workers: 0(0) to 1(3 or more)
 
     #neuralUtility
     #
@@ -906,107 +873,3 @@ class TestCreateNode(unittest.TestCase):
         outputWeights = [0.2334, -0.2985, 0.9090, 0.7329, 0.1121,
                          0.1022, -0.5234, -0.6444, -0.7291]
 
-
-
-
-player = AIPlayer(0)
-gameState = GameState.getBasicState()
-
-#will use 8 inputs
-#6 hidden nodes (9 weights per node = 54)
-#1 output node (7 weights)
-
-#some random numbers for the inputs
-inputs = player.calculateInputs(gameState)
-
-#print(player.utility(gameState))
-
-#print(inputs)
-
-hiddenLayer = player.initWeights(40)
-outputLayer = player.initWeights(9)
-
-#print(hiddenLayer)
-#print(outputLayer)
-
-#setting keepGoing to false because we don't need to backpropagate at the moment
-keepGoing = False
-
-while keepGoing:
-    #this block of code represents one epoch
-    errorSum = 0
-
-    #use the actual utility function for expected
-    expected = player.utility(gameState)
-    newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
-
-    #add the absolute value of the error to the average error of the epoch
-    absError = abs(newWeights[2])
-    errorSum += absError
-
-    #update the new layers
-    hiddenLayer = newWeights[0]
-    outputLayer = newWeights[1]
-
-    avgError = errorSum
-
-    print("Average Error: " + str(avgError))
-    if avgError < 0.0001:
-        keepGoing = False
-        print(hiddenLayer)
-        print(outputLayer)
-
-
-        
-
-'''
-#epoch series test
-player = AIPlayer(0)
-possibleInputs = [[0, 0, 0, 0, 0],
-                    [0, 0, 0, 1, 1],
-                    [0, 0, 1, 0, 0],
-                    [0, 0, 1, 1, 1],
-                    [0, 1, 0, 0, 0],
-                    [0, 1, 0, 1, 1],
-                    [0, 1, 1, 0, 0],
-                    [0, 1, 1, 1, 1],
-                    [1, 0, 0, 0, 1],
-                    [1, 0, 0, 1, 1],
-                    [1, 0, 1, 0, 1],
-                    [1, 0, 1, 1, 1],
-                    [1, 1, 0, 0, 0],
-                    [1, 1, 0, 1, 0],
-                    [1, 1, 1, 0, 0],
-                    [1, 1, 1, 1, 1]]
-
-#pick 10 random inputs
-testInputs = random.sample(possibleInputs, 10)
-
-#init random values
-hiddenLayer = player.initWeights(40)
-outputLayer = player.initWeights(9)
-
-keepGoing = True
-while keepGoing:
-
-    #this block of code represents one epoch
-    errorSum = 0
-    for inp in testInputs:
-        inputs = inp[0:4]
-        expected = inp[4]
-        newWeights = player.backPropagate(inputs, expected, hiddenLayer, outputLayer)
-
-        #add the absolute value of the error to the average error of the epoch
-        absError = abs(newWeights[2])
-        errorSum += absError
-
-        #update the new layers
-        hiddenLayer = newWeights[0]
-        outputLayer = newWeights[1]
-
-    avgError = errorSum/len(testInputs)
-
-    print("Average Error: " + str(avgError))
-    if avgError < 0.05:
-        keepGoing = False
-'''
