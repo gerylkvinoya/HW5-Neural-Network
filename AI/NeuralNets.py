@@ -44,7 +44,7 @@ class AIPlayer(Player):
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "NeuralNets_vinoya21_morganco23")
         self.gameStateList = []
-        self.trainingAI = False
+        self.trainingAI = True
         self.hiddenLayer = [0.8219066024454105, -0.9835603916085868, -0.2550000074221794, 0.3467017949416797, -0.02979686303799146, -1.2951386956179647, -0.60743875417383, -0.5285435630126529, 0.224663263433739, -0.7166697958721399, -0.5347138283025262, 0.6657639408600032, -0.5003754218219909, 0.7614368749632836, 0.5181324637140722, 0.36093235343347496, 0.8078031140164182, 0.6563292688861689, 0.45174890922102673, 0.6222864061210843, 0.3166886920709504, -0.8966685193796649, -0.12469299684251174, 0.5971298481617191, 0.053414100705435306, -0.0642779684399614, -0.569434575675846, 0.13336878933017782, -0.7176503730989361, -0.9206912584312159, -1.1488020720771956, 
                             0.07692751116150676, 0.1929331075653529, 0.6413610608306726, 0.055086218325451235, 0.5370691053442583, 0.24376132365065858, 0.2916910784257264, -0.5403330269533996, -0.9376172778499439]
         self.outputLayer = [-0.03930064843838012, -0.5254829477702588, 1.464679348174604, 0.46984391088405447, 0.7685979336638357, 0.17438706411939478, 0.5126261205000846, 0.7991301699285988, -1.0728201864278921]
@@ -315,8 +315,8 @@ class AIPlayer(Player):
             #we want the soldier to go twoards the enemy tunnel/workers
             if enemyWorkerList:
                 distToEnemyWorker = stepsToReach(currentState, mySoldiers[0].coords, enemyWorkerList[0].coords)
-                distToEnemyTunnel = stepsToReach(currentState, mySoldiers[0].coords, enemyTunnel.coords)
-                toRet = toRet + (1 / (distToEnemyWorker + (WEIGHT * 0.2))) + (1 / (distToEnemyTunnel + (WEIGHT * 0.5)))
+                #distToEnemyTunnel = stepsToReach(currentState, mySoldiers[0].coords, enemyTunnel.coords)
+                toRet = toRet + (1 / (distToEnemyWorker + (WEIGHT * 0.2)))# + (1 / (distToEnemyTunnel + (WEIGHT * 0.5)))
             
             #reward the agent for killing enemy workers
             #try to kill the queen if enemy workers dead
@@ -689,8 +689,8 @@ class AIPlayer(Player):
             #we want the soldier to go twoards the enemy tunnel/workers
             if enemyWorkerList:
                 distToEnemyWorker = stepsToReach(currentState, mySoldiers[0].coords, enemyWorkerList[0].coords)
-                distToEnemyTunnel = stepsToReach(currentState, mySoldiers[0].coords, enemyTunnel.coords)
-                soldierUtil = soldierUtil + (1 / (distToEnemyWorker + (WEIGHT * 0.2))) + (1 / (distToEnemyTunnel + (WEIGHT * 0.5)))
+                #distToEnemyTunnel = stepsToReach(currentState, mySoldiers[0].coords, enemyTunnel.coords)
+                soldierUtil = soldierUtil + (1 / (distToEnemyWorker + (WEIGHT * 0.2)))# + (1 / (distToEnemyTunnel + (WEIGHT * 0.5)))
             
             #reward the agent for killing enemy workers
             #try to kill the queen if enemy workers dead
